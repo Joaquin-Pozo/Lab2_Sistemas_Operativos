@@ -1,0 +1,4 @@
+# Laboratorio N°2 - Sistemas Operativos
+En esta tarea de programación, se requiere implementar un programa en C que procese un archivo de datos real del catálogo de Netflix, descargado desde Kaggle.
+
+El objetivo principal es contar cuántos títulos pertenecen a cada país principal, utilizando múltiples hebras (pthreads) para paralelizar el procesamiento del archivo y un mutex para garantizar la correcta sincronización al actualizar los contadores compartidos. Para esta tarea, se define país principal como el primer país listado en la columna country (si hay múltiples países separados por comas, se toma el que aparece antes de la primera coma; si country está vacío o NULL, se ignora esa fila).
