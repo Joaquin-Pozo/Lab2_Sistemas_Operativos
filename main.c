@@ -15,6 +15,9 @@ Rut: 20.237.059-4
 Ejecutado y compilado en Ubuntu 22.04.5 LTS
 */
 
+/* ----------------- Estructuras utilizadas ----------------- */
+
+// Estructura para almacenar la información del catálogo
 typedef struct {
     char show_id[10];
     char type[50];
@@ -30,15 +33,17 @@ typedef struct {
     char description[500];
 } RegistroNetflix;
 
-// Estructura de parámetros para cada hebra
+// Estructura para almacenar datos en cada hebra
 typedef struct {
     RegistroNetflix *registros;
     int inicio;
-    int fin; // no inclusivo
+    int fin;
+    // arreglo que contiene los países (sin repetir) del catálogo
     char (*paises)[MAX_NOMBRE_PAIS];
     int *cantidadPaises;
-    int *titulos; // arreglo paralelo a paises
-} ThreadParams;
+    // arreglo paralelo a paises
+    int *titulos;
+} ThreadData;
 
 // Mutex que protege el acceso a la estructura compartida (paises / titulos)
 static pthread_mutex_t mutexPaises;
@@ -100,7 +105,8 @@ void parsearLineaCSV(const char *linea, RegistroNetflix *r) {
             pos = 0;
         // Si no es comilla ni coma, copia el caracter al buffer y avanza su posicion
         } else {
-            buffer[pos++] = c;
+            buffer[pos] = c;
+            pos++;
         }
     }
     // Marca el fin del ultimo string y lo almacena en su respectivo campo
@@ -169,9 +175,6 @@ RegistroNetflix *leerArchivo(const char *nombreArchivo, int *totalRegistros) {
             registros = realloc(registros, capacidad * sizeof(RegistroNetflix));
         }
 
-        // Crea un puntero al siguiente espacio disponible del arreglo
-        RegistroNetflix *r = &registros[*totalRegistros];
-
         // Lee y almacena en el struct correctamente
         parsearLineaCSV(linea, &registros[*totalRegistros]);
         (*totalRegistros)++;
@@ -184,7 +187,7 @@ RegistroNetflix *leerArchivo(const char *nombreArchivo, int *totalRegistros) {
 /* ----------------- Funciones para manejar la tabla de paises (compartida) ----------------- */
 
 // Busca un pais en el arreglo paises. Si lo encuentra devuelve su indice.
-// Si no lo encuentra devuelve -1 (no modifica el arreglo).
+// Si no lo encuentra devuelve -1 (no modifica el arreglo)
 int buscarIndicePais(char paises[][MAX_NOMBRE_PAIS], int cantidadPaises, const char *pais) {
     for (int i = 0; i < cantidadPaises; i++) {
         // utiliza string compare para ver si son iguales
@@ -195,14 +198,14 @@ int buscarIndicePais(char paises[][MAX_NOMBRE_PAIS], int cantidadPaises, const c
     return -1;
 }
 
-// Inserta un nuevo pais en el arreglo paises en la posición cantidadPaises.
-// Devuelve el indice donde se insertó, o -1 si no hay espacio.
+// Inserta en la última posición a un nuevo país.
+// Devuelve el indice donde se insertó, o -1 si no hay espacio
 int insertarPais(char paises[][MAX_NOMBRE_PAIS], int *cantidadPaises, const char *pais) {
     // verifica si todavia hay espacio en el arreglo
     if (*cantidadPaises >= MAX_PAISES) {
         return -1;
     }
-    // copia el nombre del pais dentro del arreglo en la posicion cantidadPaises
+    // copia el nombre del pais dentro del arreglo en la ultima posicion
     strncpy(paises[*cantidadPaises], pais, MAX_NOMBRE_PAIS - 1);
     paises[*cantidadPaises][MAX_NOMBRE_PAIS - 1] = '\0';
     (*cantidadPaises)++;
@@ -210,7 +213,7 @@ int insertarPais(char paises[][MAX_NOMBRE_PAIS], int *cantidadPaises, const char
 }
 
 // Busca o inserta el país protegiendo el acceso al arreglo compartido con mutex.
-// Devuelve el índice del país (o -1 si no pudo insertar).
+// Devuelve el índice del país (o -1 si no pudo insertar)
 int obtenerIndicePaisThreadSafe(char paises[][MAX_NOMBRE_PAIS], int *cantidadPaises, const char *pais) {
     int idx;
     // Evita que otra hebra entre al mismo tiempo
@@ -228,6 +231,7 @@ int obtenerIndicePaisThreadSafe(char paises[][MAX_NOMBRE_PAIS], int *cantidadPai
 
 /* ----------------- Funciones adicionales ----------------- */
 
+/*
 // Elimina espacios al inicio y al final (in-place)
 void trim_inplace(char *s) {
     // trim a la izq
@@ -242,9 +246,10 @@ void trim_inplace(char *s) {
         len--;
     }
 }
+*/
 
 // Función que extrae el país principal (primer entry antes de la primera coma).
-// Copia el resultado en 'dest'. Devuelve 1 si hay país, 0 si no.
+// Guarda el resultado y devuelve 1 si hay país, 0 si no
 int extraerPaisPrincipal(const char *countryField, char *dest, size_t destSize) {
     if (countryField == NULL) {
         return 0;
@@ -265,11 +270,12 @@ int extraerPaisPrincipal(const char *countryField, char *dest, size_t destSize) 
     }
 
     // Elimina espacios en los bordes
-    trim_inplace(tmp);
+    //trim_inplace(tmp);
     // Si el resultado está vacío, devuelve 0
     if (tmp[0] == '\0') {
         return 0;
     }
+
     // Si el resultado no esta vacio, lo copia en dest y devuelve 1
     strncpy(dest, tmp, destSize-1);
     dest[destSize-1] = '\0';
@@ -310,41 +316,41 @@ void quicksort(RegistroPais lista[], int izquierda, int derecha) {
 }
 
 
-/* ----------------- Worker (hebra) ----------------- */
+/* ----------------- Procesamiento con hebras ----------------- */
 
-// Hebra que procesa registros[inicio..fin-1]
-void *thread_procesar(void *arg) {
-    ThreadParams *p = (ThreadParams *)arg;
+// Hebra que procesa sus registros asignados [inicio -> fin-1]
+void *procesar_thread(void *arg) {
+    ThreadData *thread_data = (ThreadData *)arg;
     char paisPrincipal[MAX_NOMBRE_PAIS];
 
-    for (int i = p->inicio; i < p->fin; i++) {
+    for (int i = thread_data->inicio; i < thread_data->fin; i++) {
         // Extrae el país principal del registro i
-        if (!extraerPaisPrincipal(p->registros[i].country, paisPrincipal, sizeof(paisPrincipal))) {
+        if (!extraerPaisPrincipal(thread_data->registros[i].country, paisPrincipal, sizeof(paisPrincipal))) {
             continue; // si el campo esta vacío, lo ignora y continua
         }
 
         // Obtiene el indice del país (thread-safe). Si no existe, lo inserta
-        int idx = obtenerIndicePaisThreadSafe(p->paises, p->cantidadPaises, paisPrincipal);
+        int idx = obtenerIndicePaisThreadSafe(thread_data->paises, thread_data->cantidadPaises, paisPrincipal);
         if (idx < 0) {
             // Si no se pudo insertar (quizas por arreglo lleno), omite y continua
             continue;
         }
 
-        // Bloqua el mutex
+        // Bloquea el mutex antes de acceder al contador compartido
         pthread_mutex_lock(&mutexPaises);
-        // Se incrementa el contador en su indice correspondiente
-        p->titulos[idx]++;
+        // Incrementar el contador compartido
+        thread_data->titulos[idx]++;
         // Desbloquea el mutex
         pthread_mutex_unlock(&mutexPaises);
     }
 
-    return NULL;
+    pthread_exit(NULL);
 }
 
 /* ----------------- Orquestador: crea hebras y genera reporte ----------------- */
 
-// Función que recibe registros y divide el trabajo entre cantidad_hebras,
-// actualiza los arreglos paises/titulos y escribe el archivo de salida.
+// Función que recibe registros y divide el trabajo entre la cantidad de hebras.
+// Actualiza los arreglos paises/titulos, genera y escribe el archivo de salida.
 void conteoConHebras(RegistroNetflix *registros, int lineas, int cantidad_hebras) {
     // Arreglos compartidos (dentro de esta función pero accesibles por threads via params)
     static char paises[MAX_PAISES][MAX_NOMBRE_PAIS];
@@ -364,7 +370,7 @@ void conteoConHebras(RegistroNetflix *registros, int lineas, int cantidad_hebras
 
     // Crea los parametros y threads
     pthread_t *threads = malloc(sizeof(pthread_t) * cantidad_hebras);
-    ThreadParams *params = malloc(sizeof(ThreadParams) * cantidad_hebras);
+    ThreadData *thread_data = malloc(sizeof(ThreadData) * cantidad_hebras);
 
     // base = cantidad minimima de lineas que recibe cada hebra
     int base = lineas / cantidad_hebras;
@@ -374,27 +380,27 @@ void conteoConHebras(RegistroNetflix *registros, int lineas, int cantidad_hebras
 
     // Realiza una distribución equitativa de lineas entre hebras
     for (int i = 0; i < cantidad_hebras; i++) {
-        // Si i es menor que el resto, le suma 1 a la base, caso contrario, no suma nada
+        // Si el iterador es menor que el resto, le agrega 1 linea mas al thread, caso contrario, no suma nada
         int cantidad_lineas = base + (i < resto ? 1 : 0);
-        params[i].registros = registros;
-        params[i].inicio = inicio;
-        params[i].fin = inicio + cantidad_lineas;
-        params[i].paises = paises;
-        params[i].cantidadPaises = &cantidadPaises;
-        params[i].titulos = titulos;
+        thread_data[i].registros = registros;
+        thread_data[i].inicio = inicio;
+        thread_data[i].fin = inicio + cantidad_lineas;
+        thread_data[i].paises = paises;
+        thread_data[i].cantidadPaises = &cantidadPaises;
+        thread_data[i].titulos = titulos;
 
         // crear hebra
-        pthread_create(&threads[i], NULL, thread_procesar, &params[i]);
+        pthread_create(&threads[i], NULL, procesar_thread, &thread_data[i]);
 
         inicio += cantidad_lineas;
     }
 
-    // Esperar todas las hebras
+    // Espera a que finalicen todas las hebras
     for (int i = 0; i < cantidad_hebras; i++) {
         pthread_join(threads[i], NULL);
     }
 
-    // Destruir mutex
+    // Destruir el mutex despues de su uso
     pthread_mutex_destroy(&mutexPaises);
 
     // Crea un arreglo auxiliar para ordenar por cantidad (mayor a menor)
@@ -417,13 +423,14 @@ void conteoConHebras(RegistroNetflix *registros, int lineas, int cantidad_hebras
         for (int i = 0; i < cantidadPaises; i++) {
             fprintf(out, "%s  | %d\n", lista[i].pais, lista[i].cantidad);
         }
+        printf("Reporte generado éxitosamente.\n");
         fclose(out);
     }
 
-    // Liberar recursos
+    // Libera recursos en memoria utilizados
     free(lista);
     free(threads);
-    free(params);
+    free(thread_data);
 }
 
 int main(int argc, char *argv[]) {
