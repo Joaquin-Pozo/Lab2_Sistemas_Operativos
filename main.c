@@ -231,23 +231,6 @@ int obtenerIndicePaisThreadSafe(char paises[][MAX_NOMBRE_PAIS], int *cantidadPai
 
 /* ----------------- Funciones adicionales ----------------- */
 
-/*
-// Elimina espacios al inicio y al final (in-place)
-void trim_inplace(char *s) {
-    // trim a la izq
-    char *start = s;
-    while (*start == ' ' || *start == '\t') start++;
-    if (start != s) memmove(s, start, strlen(start) + 1);
-
-    // trim a la derecha
-    size_t len = strlen(s);
-    while (len > 0 && (s[len-1] == ' ' || s[len-1] == '\t' || s[len-1] == '\r' || s[len-1] == '\n')) {
-        s[len-1] = '\0';
-        len--;
-    }
-}
-*/
-
 // Función que extrae el país principal (primer entry antes de la primera coma).
 // Guarda el resultado y devuelve 1 si hay país, 0 si no
 int extraerPaisPrincipal(const char *countryField, char *dest, size_t destSize) {
@@ -269,8 +252,6 @@ int extraerPaisPrincipal(const char *countryField, char *dest, size_t destSize) 
         *coma = '\0';
     }
 
-    // Elimina espacios en los bordes
-    //trim_inplace(tmp);
     // Si el resultado está vacío, devuelve 0
     if (tmp[0] == '\0') {
         return 0;

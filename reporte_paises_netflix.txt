@@ -1,63 +1,83 @@
 País principal  | Títulos
 --------------------------------
-United States  | 653
-India  | 123
-United Kingdom  | 97
-Japan  | 51
-Canada  | 45
-South Korea  | 39
-France  | 38
-Spain  | 32
-Nigeria  | 29
-Philippines  | 29
-Turkey  | 28
-Germany  | 21
-Australia  | 21
-Indonesia  | 18
-Mexico  | 18
-Italy  | 17
-China  | 17
-Lebanon  | 17
-Argentina  | 15
-Brazil  | 14
-Taiwan  | 13
-Egypt  | 12
-South Africa  | 10
-Poland  | 7
-Thailand  | 7
-Colombia  | 7
-Ireland  | 6
-Belgium  | 6
-Sweden  | 5
-Norway  | 5
-Netherlands  | 4
-Malaysia  | 4
-Israel  | 4
-United Arab Emirates  | 3
-Romania  | 3
-Denmark  | 3
-Russia  | 3
-Hong Kong  | 3
+United States  | 2882
+India  | 956
+United Kingdom  | 577
+Canada  | 259
+Japan  | 237
+France  | 196
+South Korea  | 194
+Spain  | 168
+Mexico  | 123
+Australia  | 108
+Turkey  | 106
+Egypt  | 105
+Germany  | 92
+China  | 86
+Taiwan  | 82
+Brazil  | 79
+Hong Kong  | 77
+Indonesia  | 76
+Philippines  | 75
+Nigeria  | 71
+Argentina  | 68
+Thailand  | 61
+Italy  | 59
+Colombia  | 36
+South Africa  | 35
+Denmark  | 30
+Singapore  | 28
+Poland  | 26
+Ireland  | 26
+Netherlands  | 25
+Malaysia  | 23
+Pakistan  | 22
+Chile  | 21
+Lebanon  | 20
+Norway  | 20
+Russia  | 20
+Israel  | 19
+United Arab Emirates  | 19
+Sweden  | 16
+New Zealand  | 15
+Belgium  | 14
+Romania  | 10
+Saudi Arabia  | 10
+Uruguay  | 9
+Austria  | 8
+Switzerland  | 7
+Kuwait  | 6
+Peru  | 6
+Finland  | 6
+Czech Republic  | 5
+Bulgaria  | 5
+Vietnam  | 5
+Iceland  | 5
+Hungary  | 4
+Ghana  | 4
 Kenya  | 3
+Serbia  | 3
 Portugal  | 2
-Uruguay  | 2
-Austria  | 2
-Iceland  | 2
-New Zealand  | 2
-Saudi Arabia  | 2
-Kuwait  | 2
-Finland  | 2
-Vietnam  | 2
-Bangladesh  | 1
-Luxembourg  | 1
-Switzerland  | 1
-Singapore  | 1
-Senegal  | 1
-Hungary  | 1
-Chile  | 1
-Mauritius  | 1
-Syria  | 1
-Bulgaria  | 1
+Cambodia  | 2
+Georgia  | 2
+Ukraine  | 2
+Bangladesh  | 2
+Croatia  | 2
+Venezuela  | 2
+West Germany  | 1
+Slovenia  | 1
+Somalia  | 1
+Cyprus  | 1
 Jordan  | 1
-Cameroon  | 1
-Czech Republic  | 1
+Jamaica  | 1
+Paraguay  | 1
+Belarus  | 1
+Iran  | 1
+Senegal  | 1
+Soviet Union  | 1
+Mauritius  | 1
+Puerto Rico  | 1
+Guatemala  | 1
+Zimbabwe  | 1
+Namibia  | 1
+Greece  | 1
