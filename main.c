@@ -7,6 +7,14 @@
 #define MAX_PAISES 195
 #define MAX_NOMBRE_PAIS 60
 
+/*
+Universidad de Santiago de Chile
+Laboratorio N°2: Sistemas Operativos
+Estudiante: Joaquín Pozo Garrao
+Rut: 20.237.059-4
+Ejecutado y compilado en Ubuntu 22.04.5 LTS
+*/
+
 typedef struct {
     char show_id[10];
     char type[50];
